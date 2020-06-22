@@ -31,12 +31,25 @@ func GetApplication(client *gate.GatewayClient, applicationName string, dest int
 	return nil
 }
 
-func CreateApplication(client *gate.GatewayClient, applicationName, email string) error {
+//
+func CreateApplication(client *gate.GatewayClient, applicationName string, email string, permissionsRead []string, permissionsWrite []string, permissionsExecute []string) error {
+
+	permissions := map[string]interface{}{
+		"READ":    permissionsRead,
+		"WRITE":   permissionsWrite,
+		"EXECUTE": permissionsExecute,
+	}
+
+	spec := map[string]interface{}{
+		"email":       email,
+		"permissions": permissions,
+	}
 
 	app := map[string]interface{}{
 		"instancePort": 80,
 		"name":         applicationName,
 		"email":        email,
+		"spec":         spec,
 	}
 
 	createAppTask := map[string]interface{}{

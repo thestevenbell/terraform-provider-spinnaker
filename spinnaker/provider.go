@@ -6,6 +6,7 @@ import (
 	gate "github.com/spinnaker/spin/cmd/gateclient"
 )
 
+// Provider provider
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{

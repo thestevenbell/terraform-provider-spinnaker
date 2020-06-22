@@ -19,6 +19,27 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"permissions_read": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"permissions_write": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"permissions_execute": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 		Create: resourceApplicationCreate,
 		Read:   resourceApplicationRead,
@@ -27,6 +48,28 @@ func resourceApplication() *schema.Resource {
 		Exists: resourceApplicationExists,
 	}
 }
+
+// {
+// 	"application": "applicationA",
+// 	"cloudProviders": "kubernetes",
+// 	"description": "Demo sponnet application",
+// 	"email": "youremail@example.com",
+// 	"spec": {
+// 	   "email": "youremail@example.com",
+// 	   "permissions": {
+// 		  "EXECUTE": [
+// 			 "com_sre_dev"
+// 		  ],
+// 		  "READ": [
+// 			 "com_sre_dev"
+// 		  ],
+// 		  "WRITE": [
+// 			 "com_sre_dev"
+// 		  ]
+// 	   }
+// 	},
+// 	"user": "youremail@example.com"
+//  }
 
 type applicationRead struct {
 	Name       string `json:"name"`
@@ -41,7 +84,11 @@ func resourceApplicationCreate(data *schema.ResourceData, meta interface{}) erro
 	application := data.Get("application").(string)
 	email := data.Get("email").(string)
 
-	if err := api.CreateApplication(client, application, email); err != nil {
+	permissionsRead := data.Get("permissions_read").([]string)
+	permissionsWrite := data.Get("permissions_write").([]string)
+	permissionsExecute := data.Get("permissions_execute").([]string)
+
+	if err := api.CreateApplication(client, application, email, permissionsRead, permissionsWrite, permissionsExecute); err != nil {
 		return err
 	}
 
@@ -61,7 +108,15 @@ func resourceApplicationRead(data *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceApplicationUpdate(data *schema.ResourceData, meta interface{}) error {
-	return nil
+	clientConfig := meta.(gateConfig)
+	client := clientConfig.client
+	applicationName := data.Get("application").(string)
+	var app applicationRead
+	if err := api.GetApplication(client, applicationName, &app); err != nil {
+		return err
+	}
+
+	return readApplication(data, app)
 }
 
 func resourceApplicationDelete(data *schema.ResourceData, meta interface{}) error {
